@@ -8,6 +8,8 @@ type TransfortConfig = {
     signal?: AbortSignal;
 };
 
+type Callback = () => void;
+
 type ApiMethodCommon<Endpoint> = {
     endpoint: Endpoint;
 };
@@ -22,8 +24,8 @@ type ApiMethodFetch<P, R, Endpoint = string, T = TransfortConfig> = {
 
 type BaseResult<P, R, Endpoint extends string> = {
     fetch: ApiMethodFetch<P, R, Endpoint>;
-    reset: VoidFunction | null;
-    retry: VoidFunction;
+    reset: Callback | null;
+    retry: Callback;
     data: R | null;
     initial: boolean;
     loading: boolean;
@@ -43,7 +45,7 @@ type UseApiMethodResult<P, R, Endpoint extends string> = {
 type UseApiMethodParams<P, R> = {
     onSuccess?: (data: R) => void;
     onError?: (error: string) => void;
-    onFinally?: VoidFunction;
+    onFinally?: Callback;
     fetchImmediately?: boolean;
     params?: P;
 };
