@@ -1,7 +1,7 @@
 {
     "name": "@koslibs/api",
     "version": "0.1.4",
-    "description": "Reusable API client utilities extracted from GullEye",
+    "description": "Reusable API client utilities",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "private": false,
