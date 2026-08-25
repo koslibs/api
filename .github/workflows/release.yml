@@ -48,7 +48,13 @@ jobs:
                   git push origin HEAD:main
 
             - name: Publish to npm
+              run: npm whoami
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Publish to npm
               run: npm run release
               env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
                   NPM_CONFIG_PROVENANCE: true
                   CI: true
