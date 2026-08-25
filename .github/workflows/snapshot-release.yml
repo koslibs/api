@@ -1,0 +1,30 @@
+name: Snapshot release
+
+on: workflow_dispatch
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repo
+              uses: actions/checkout@v6
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 24.12.0
+
+            - name: Install dependencies
+              run: npm install --immutable
+
+            - name: Create release pull request or publish to npm
+              uses: changesets/action@v1
+              with:
+                  publish: 'npm run release:snapshot'
+                  version: 'npm run version-package:snapshot'
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  CI: true

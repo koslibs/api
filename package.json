@@ -1,0 +1,115 @@
+{
+    "name": "@koslibs/api",
+    "version": "0.1.0",
+    "description": "Reusable API client utilities extracted from GullEye",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "private": false,
+    "license": "MIT",
+    "author": "holypower777",
+    "type": "module",
+    "files": [
+        "dist",
+        "LICENSE",
+        "README.md"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "lint": "npm run lint:js && npm run format:check",
+        "lint:fix": "npm run lint:js -- --fix && npm run format",
+        "lint:js": "koslibs-lint js",
+        "prepack": "npm run build",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "format": "koslibs-lint format",
+        "format:check": "koslibs-lint format:check",
+        "release": "changeset publish",
+        "release:snapshot": "changeset publish --tag snapshot --no-git-tag",
+        "version-package": "changeset version",
+        "version-package:patch": "npm version patch --no-git-tag-version",
+        "version-package:snapshot": "changeset version --snapshot snapshot"
+    },
+    "bugs": {
+        "url": "https://github.com/koslibs/api/issues"
+    },
+    "homepage": "https://github.com/koslibs/api",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/koslibs/api.git"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "engines": {
+        "node": ">=22.14.0"
+    },
+    "sideEffects": false,
+    "prettier": "./node_modules/@koslibs/configs/prettier",
+    "commitlint": {
+        "extends": "./node_modules/@koslibs/configs/commitlint"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./axios": {
+            "types": "./dist/axios/index.d.ts",
+            "import": "./dist/axios/index.js"
+        },
+        "./create-api": {
+            "types": "./dist/create-api/create-api.d.ts",
+            "import": "./dist/create-api/create-api.js"
+        },
+        "./create-api/api-base-path": {
+            "types": "./dist/create-api/api-base-path.d.ts",
+            "import": "./dist/create-api/api-base-path.js"
+        },
+        "./use-api": {
+            "types": "./dist/use-api/index.d.ts",
+            "import": "./dist/use-api/index.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "keywords": [
+        "api",
+        "axios",
+        "hooks",
+        "react",
+        "typescript"
+    ],
+    "funding": {
+        "type": "github",
+        "url": "https://github.com/koslibs"
+    },
+    "typesVersions": {
+        "*": {
+            "axios": [
+                "./dist/axios/index.d.ts"
+            ],
+            "create-api": [
+                "./dist/create-api/create-api.d.ts"
+            ],
+            "create-api/api-base-path": [
+                "./dist/create-api/api-base-path.d.ts"
+            ],
+            "use-api": [
+                "./dist/use-api/index.d.ts"
+            ]
+        }
+    },
+    "dependencies": {
+        "axios": "1.19.0"
+    },
+    "devDependencies": {
+        "@changesets/changelog-github": "^0.5.2",
+        "@changesets/cli": "^2.29.8",
+        "@koslibs/configs": "^0.2.9",
+        "typescript": "^5.7.2",
+        "@types/react": "^18.3.18",
+        "@types/react-dom": "^18.3.5"
+    },
+    "peerDependencies": {
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    }
+}
