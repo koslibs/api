@@ -26,7 +26,8 @@
         "release:snapshot": "changeset publish --tag snapshot --no-git-tag",
         "version-package": "changeset version",
         "version-package:patch": "npm version patch --no-git-tag-version",
-        "version-package:snapshot": "changeset version --snapshot snapshot"
+        "version-package:snapshot": "changeset version --snapshot snapshot",
+        "test": "npm run build && node --test tests/*.test.mjs && tsc -p tests/tsconfig.json"
     },
     "bugs": {
         "url": "https://github.com/koslibs/api/issues"

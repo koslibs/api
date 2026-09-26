@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from '../../axios/index.js';
 
-export type RequestConfigExtender<AdditionalParams> = {
+export type RequestConfigExtender<AdditionalParams = {}> = {
     (config: AxiosRequestConfig, params?: AdditionalParams): AxiosRequestConfig;
 };
 export type ConfigExtendersCollection<T = {}> = RequestConfigExtender<T> & {

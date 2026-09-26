@@ -1,18 +1,20 @@
-import { getBaseApiPath } from './api-base-path.js';
 import {
     type AxiosRequestConfig,
     type AxiosError,
     type AxiosPromise,
     type CancelToken,
 } from '../axios/index.js';
+import axios from '../axios/index.js';
+
+import { getBaseApiPath } from './api-base-path.js';
 import {
     type ConfigExtendersCollection,
+    type RequestConfigExtender,
     createConfigExtendersCollection,
     baseUrl,
     pathExtender,
 } from './extenders/index.js';
-
-import axios from '../axios/index.js';
+import { applyGlobalApiExtenders } from './global-extenders.js';
 
 type Api<T> = {
     [X in keyof T]: T[X];
@@ -59,7 +61,7 @@ export type Declaration<T, AdditionalParams, Endpoint> =
               api?: T;
           };
 
-type ApiServices<T, AdditionalParams = {}> = {
+export type ApiServices<T, AdditionalParams = {}> = {
     [X in keyof T]: Declaration<T[X], AdditionalParams, X>;
 };
 
@@ -118,12 +120,21 @@ const initApi = <T, P>(declaration: Api<T>, { getConfigExtenders }: InitApiConfi
     });
 };
 
-export const createApi = <T, P>(declaration: Api<T>, path = '') => {
+const createApiWithExtenders = <T, P extends object>(
+    declaration: Api<T>,
+    path: string,
+    customExtenders: RequestConfigExtender<P>
+) => {
     const optionalSlash = path ? '/' : '';
     const apiPath = `${optionalSlash}${path}`;
 
-    const apiMap = initApi(declaration, {
-        getConfigExtenders: (extenders) => extenders.add(baseUrl()).add(pathExtender(apiPath)),
+    const apiMap = initApi<T, P>(declaration, {
+        getConfigExtenders: (extenders) =>
+            extenders
+                .add(baseUrl())
+                .add(pathExtender(apiPath))
+                .add(applyGlobalApiExtenders)
+                .add(customExtenders),
     });
 
     Object.entries(apiMap).reduce((agg, nextApi) => {
@@ -140,3 +151,24 @@ export const createApi = <T, P>(declaration: Api<T>, path = '') => {
 
     return apiMap;
 };
+
+export type CreateApiOptions<P = {}> = {
+    extenders?: (collection: ConfigExtendersCollection) => ConfigExtendersCollection<P>;
+};
+
+export const createApi = <T, P extends object = {}>(
+    declaration: T,
+    path = '',
+    options: CreateApiOptions<P> = {}
+): ApiServices<T, P> => {
+    const local = options.extenders?.(createConfigExtendersCollection());
+    const extenders = createConfigExtendersCollection<P>();
+
+    if (local) {
+        extenders.add(local);
+    }
+
+    return createApiWithExtenders<T, P>(declaration, path, extenders);
+};
+
+export { addGlobalApiExtenders } from './global-extenders.js';
