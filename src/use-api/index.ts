@@ -1,8 +1,9 @@
+import axios, { type AxiosPromise } from 'axios';
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 
-import { apiReducer, initialState, type ApiReducer } from './reducer.js';
-import axios, { type AxiosPromise } from 'axios';
 import { useDeepMemo } from '../use-deep-memo/use-deep-memo.js';
+
+import { apiReducer, initialState, type ApiReducer } from './reducer.js';
 
 type TransfortConfig = {
     signal?: AbortSignal;
