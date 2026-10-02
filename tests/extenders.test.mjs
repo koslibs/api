@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
 
 import { createApi, addGlobalApiExtenders, setBaseApiPath } from '@koslibs/api';
 import { addGlobalApiExtenders as subpathRegister } from '@koslibs/api/create-api';
+import { test } from '@koslibs/builder/rstest';
 
 const declaration = {
     read: () => ({
@@ -46,7 +46,7 @@ test('late registration, live state, local override and disposal', async (t) => 
     const dispose = addGlobalApiExtenders((collection) =>
         collection.add(header('Profile-Id', () => profile))
     );
-    t.after(dispose);
+    t.onTestFinished(dispose);
     assert.equal((await api.read()).config.headers.get('Profile-Id'), '1');
     profile = '2';
     assert.equal((await api.read()).config.headers.get('Profile-Id'), '2');
@@ -74,8 +74,8 @@ test('registration order and independent cleanup', async (t) => {
             return config;
         })
     );
-    t.after(first);
-    t.after(second);
+    t.onTestFinished(first);
+    t.onTestFinished(second);
     const api = createApi(declaration, 'api/v1', {
         extenders: (collection) =>
             collection.add((config) => {
@@ -104,7 +104,7 @@ test('changes during execution apply to the next request', async (t) => {
             return config;
         })
     );
-    t.after(() => {
+    t.onTestFinished(() => {
         dispose();
         cleanup();
     });
@@ -134,6 +134,6 @@ test('extender failure rejects before transport', async (t) => {
             throw failure;
         })
     );
-    t.after(dispose);
+    t.onTestFinished(dispose);
     await assert.rejects(createApi(declaration).read(), (error) => error === failure);
 });

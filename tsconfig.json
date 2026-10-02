@@ -2,10 +2,7 @@
     "extends": "@koslibs/configs/tsconfig/node",
     "compilerOptions": {
         "declaration": true,
-        "declarationMap": true,
-        "rootDir": "./src",
-        "sourceMap": true,
         "verbatimModuleSyntax": true
     },
-    "include": ["src/**/*.ts"]
+    "include": ["src/**/*.ts", "koslibs-builder.ts"]
 }
