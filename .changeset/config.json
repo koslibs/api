@@ -1,6 +1,6 @@
 {
     "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
-    "changelog": ["@changesets/changelog-github", { "repo": "koslibs/api" }],
+    "changelog": ["@koslibs/configs/changelog", { "repo": "koslibs/api" }],
     "commit": false,
     "fixed": [],
     "linked": [],

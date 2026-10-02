@@ -52,9 +52,14 @@ In another project this works automatically in Node.js, because `process.env` ex
 
 ## Development
 
+Requires Node.js >= 24.13.0. Build and typechecking use `@koslibs/builder`;
+`koslibs-builder.ts` contains the local build settings. The library is emitted
+as ESM with preserved module paths and declarations in `dist`.
+
 ```bash
 npm run typecheck
 npm run build
+npm test
 npm run lint
 ```
 
@@ -112,4 +117,50 @@ createApi, addGlobalApiExtenders and CreateApiOptions are available from the
 root and @koslibs/api/create-api. RequestConfigExtender and
 ConfigExtendersCollection types are exported from the root.
 
-Run npm test for build, runtime tests and TypeScript inference tests.
+Run npm test for build (pretest), runtime tests through Rstest and TypeScript inference tests (posttest).
+Runtime tests import the built package, so they also exercise its public exports.
+Run npm run test:types to check inference against an existing build.
+
+## Changesets and releases
+
+Release commands and Git hooks come from `@koslibs/configs@0.2.12` through
+`koslibs-release`. The local `lefthook.yml` extends the shared preset;
+Changesets and Lefthook do not need separate project dependencies.
+The formatter is `@koslibs/configs/changelog`, configured for `koslibs/api`.
+
+Before pushing a branch, run `npm run changeset`. Select `@koslibs/api`, choose
+`patch`, `minor` or `major`, and describe the change. Commit the generated
+`.changeset/*.md` file together with your changes, then push.
+
+`npm run changeset:check` checks committed changes against `origin/main`.
+Run `git fetch origin main` if that reference is unavailable or outdated.
+The pre-push hook checks the actual commits being pushed, so an untracked or
+staged changeset does not count. Every branch with new commits needs a new,
+non-empty changeset; documentation and tooling changes also follow this rule.
+Branch deletion, tag pushes and commits already included in `origin/main` do
+not need another changeset. Git hooks are installed by `npm install` / `npm ci`
+through `prepare`; run `npm run prepare` to reinstall them.
+
+PRs targeting `main` also run the shared `Changeset required` check. Make the
+check emitted by the reusable workflow required in GitHub branch protection
+for `main` to block merges when it fails. After migrating from the standalone
+workflow, select the new check in the ruleset if the old check was required.
+Keep an allowed path for automated release commits to `main`; otherwise branch
+protection will reject the version/changelog push. Repositories that require a
+PR for every write may need a release GitHub App with an explicit ruleset bypass.
+Local hooks can be bypassed with `--no-verify`; the PR check still runs.
+
+After merging into `main`, the release workflow runs `changeset version`, which
+updates the package version and `CHANGELOG.md` and removes consumed changesets.
+The workflow refreshes `package-lock.json`, commits all release changes, then
+publishes to npm and pushes release tags. The largest pending version bump wins;
+several patch changesets produce one patch release. Only the automated release
+commit bypasses local hooks, because its changesets have just been consumed.
+Changelog generation uses the workflow's `GITHUB_TOKEN` for GitHub links.
+
+The release, snapshot and PR-check workflows call the shared workflows from
+`koslibs/configs`, pinned to the Git tag `v0.2.12`. The npm dependency and GitHub
+workflow reference are updated separately. Both publication workflows map the
+existing `NPM_TOKEN` secret to the shared workflow's `npm_token` input.
+If branch protection requires a release GitHub App, pass its token as the
+optional `release_token` secret in the release caller.

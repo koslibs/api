@@ -14,20 +14,26 @@
         "README.md"
     ],
     "scripts": {
-        "build": "tsc -p tsconfig.build.json",
-        "lint": "npm run lint:js && npm run format:check",
-        "lint:fix": "npm run lint:js -- --fix && npm run format",
+        "build": "koslibs-builder lib:build",
+        "typecheck": "koslibs-builder lib:typecheck",
+        "lint": "koslibs-lint lint",
+        "lint:fix": "koslibs-lint lint:fix",
         "lint:js": "koslibs-lint js",
-        "prepack": "npm run build",
-        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint:js:fix": "koslibs-lint js --fix",
         "format": "koslibs-lint format",
         "format:check": "koslibs-lint format:check",
-        "release": "changeset publish",
-        "release:snapshot": "changeset publish --tag snapshot --no-git-tag",
-        "version-package": "changeset version",
-        "version-package:patch": "npm version patch --no-git-tag-version",
-        "version-package:snapshot": "changeset version --snapshot snapshot",
-        "test": "npm run build && node --test tests/*.test.mjs && tsc -p tests/tsconfig.json"
+        "pretest": "koslibs-builder lib:build",
+        "test": "koslibs-builder lib:test",
+        "posttest": "koslibs-builder lib:typecheck --root ./tests",
+        "test:types": "koslibs-builder lib:typecheck --root ./tests",
+        "prepack": "koslibs-builder lib:build",
+        "release": "koslibs-release publish",
+        "release:snapshot": "koslibs-release publish --tag snapshot --no-git-tag",
+        "version-package": "koslibs-release version",
+        "version-package:snapshot": "koslibs-release version --snapshot snapshot",
+        "changeset": "koslibs-release add",
+        "changeset:check": "koslibs-release check",
+        "prepare": "koslibs-release hooks:install"
     },
     "bugs": {
         "url": "https://github.com/koslibs/api/issues"
@@ -102,12 +108,11 @@
         "axios": "1.20.0"
     },
     "devDependencies": {
-        "@changesets/changelog-github": "^0.5.2",
-        "@changesets/cli": "^2.29.8",
-        "@koslibs/configs": "^0.2.11",
+        "@koslibs/builder": "^0.1.0",
+        "@koslibs/configs": "^0.2.12",
+        "@types/node": "^24.19.0",
         "@types/react": "^18.3.18",
-        "@types/react-dom": "^18.3.5",
-        "typescript": "^5.7.2"
+        "@types/react-dom": "^18.3.5"
     },
     "peerDependencies": {
         "react": "^18.3.1",

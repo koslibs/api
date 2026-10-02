@@ -2,8 +2,8 @@ name: Release
 
 on:
     push:
-        branches:
-            - main
+        branches: [main]
+    workflow_dispatch:
 
 permissions:
     contents: write
@@ -11,50 +11,7 @@ permissions:
 
 jobs:
     release:
-        if: github.actor != 'github-actions[bot]'
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Repo
-              uses: actions/checkout@v6
-              with:
-                  ref: main
-                  token: ${{ secrets.GITHUB_TOKEN }}
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v6
-              with:
-                  node-version: 24.13.0
-                  registry-url: 'https://registry.npmjs.org'
-                  package-manager-cache: false
-
-            - name: Install dependencies
-              run: npm ci
-
-            - name: Bump package version
-              run: npm run version-package:patch
-
-            - name: Commit version bump
-              run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-                  if git diff --quiet package.json package-lock.json; then
-                    echo "No version changes to commit"
-                    exit 0
-                  fi
-
-                  git add package.json package-lock.json
-                  git commit -m "chore(release): bump version on push"
-                  git push origin HEAD:main
-
-            - name: Publish to npm
-              run: npm whoami
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-            - name: Publish to npm
-              run: npm run release
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-                  NPM_CONFIG_PROVENANCE: true
-                  CI: true
+        if: github.actor != 'github-actions[bot]' || github.event_name == 'workflow_dispatch'
+        uses: koslibs/configs/.github/workflows/npm-release.yml@v0.2.12
+        secrets:
+            npm_token: ${{ secrets.NPM_TOKEN }}
