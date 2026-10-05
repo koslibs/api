@@ -2,6 +2,7 @@
     "extends": "@koslibs/configs/tsconfig/node",
     "compilerOptions": {
         "declaration": true,
+        "esModuleInterop": true,
         "verbatimModuleSyntax": true
     },
     "include": ["src/**/*.ts", "koslibs-builder.ts"]

@@ -8,6 +8,6 @@ permissions:
 
 jobs:
     release:
-        uses: koslibs/configs/.github/workflows/npm-snapshot.yml@v0.2.12
+        uses: koslibs/configs/.github/workflows/npm-snapshot.yml@v1.0.0
         secrets:
             npm_token: ${{ secrets.NPM_TOKEN }}

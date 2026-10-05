@@ -123,7 +123,7 @@ Run npm run test:types to check inference against an existing build.
 
 ## Changesets and releases
 
-Release commands and Git hooks come from `@koslibs/configs@0.2.12` through
+Release commands and Git hooks come from `@koslibs/configs@1.0.0` through
 `koslibs-release`. The local `lefthook.yml` extends the shared preset;
 Changesets and Lefthook do not need separate project dependencies.
 The formatter is `@koslibs/configs/changelog`, configured for `koslibs/api`.
@@ -159,7 +159,7 @@ commit bypasses local hooks, because its changesets have just been consumed.
 Changelog generation uses the workflow's `GITHUB_TOKEN` for GitHub links.
 
 The release, snapshot and PR-check workflows call the shared workflows from
-`koslibs/configs`, pinned to the Git tag `v0.2.12`. The npm dependency and GitHub
+`koslibs/configs`, pinned to the Git tag `v1.0.0`. The npm dependency and GitHub
 workflow reference are updated separately. Both publication workflows map the
 existing `NPM_TOKEN` secret to the shared workflow's `npm_token` input.
 If branch protection requires a release GitHub App, pass its token as the
