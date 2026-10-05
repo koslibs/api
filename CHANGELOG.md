@@ -1,5 +1,11 @@
 # @koslibs/api
 
+## 0.2.1
+
+### Patch Changes
+
+- [`63c4fc7`](https://github.com/koslibs/api/commit/63c4fc722a0653311ba0e1bfd86186ce38cadf07) Thanks [@holypower777](https://github.com/holypower777)! - Update shared build and release tooling to @koslibs/builder 1.0.0 and @koslibs/configs 1.0.0, including the reusable release workflows, to resolve vulnerabilities in development dependencies. Enable TypeScript module interoperability for compatibility with the updated compiler.
+
 ## 0.2.0
 
 ### Minor Changes
