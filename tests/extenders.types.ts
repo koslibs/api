@@ -12,6 +12,11 @@ api.read({ id: 1 }, { trace: 'test' }).then((response) => {
     const name: string = response.data.name;
     void name;
 });
+api.read.describeRequest({ id: 1 }, { trace: 'test' }).url satisfies string;
+// @ts-expect-error description requires the local extender parameters
+api.read.describeRequest({ id: 1 });
+// @ts-expect-error description preserves declaration parameters
+api.read.describeRequest({ id: 'invalid' }, { trace: 'test' });
 // @ts-expect-error local parameters are required
 api.read({ id: 1 });
 // @ts-expect-error local parameters cannot be replaced

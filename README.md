@@ -178,3 +178,14 @@ workflow reference are updated separately. Both publication workflows map the
 existing `NPM_TOKEN` secret to the shared workflow's `npm_token` input.
 If branch protection requires a release GitHub App, pass its token as the
 optional `release_token` secret in the release caller.
+
+## Request descriptions
+
+Every createApi method exposes `describeRequest(params, transportConfig)`.
+It returns `{ url, method, body, headers }` using the same declaration and
+base/path/global/local extenders as a real call, including the current base URL
+and Axios query serializer. Required extender parameters remain required.
+It does not send a request or run Axios interceptors (including async authorization).
+Extenders are evaluated synchronously and may have their own side effects.
+The structural contract is consumed by `@koslibs/playwright/mock-api`;
+the API runtime has no dependency on a browser test runner.

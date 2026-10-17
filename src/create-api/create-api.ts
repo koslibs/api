@@ -25,6 +25,24 @@ export type ApiDeclaration<ParamsData, Endpoint = ''> = {
     endpoint?: Endpoint;
 };
 
+export type ApiRequestDescription = {
+    url: string;
+    method: string;
+    body?: unknown;
+    headers: Record<string, string>;
+};
+
+type DescribeRequest<Params, AdditionalParams> =
+    RequiredKeys<AdditionalParams> extends never
+        ? (
+              params: Params,
+              transportConfig?: TransportConfig & AdditionalParams
+          ) => ApiRequestDescription
+        : (
+              params: Params,
+              transportConfig: TransportConfig & AdditionalParams
+          ) => ApiRequestDescription;
+
 type ExtractApiResponseType<T> = T extends ApiDeclaration<infer _P, infer D> ? D : unknown;
 
 type ExtractApiParamsType<T> = T extends ApiDeclaration<infer P, infer _D> ? P : unknown;
@@ -46,6 +64,7 @@ export type Declaration<T, AdditionalParams, Endpoint> =
                   transfortConfig?: TransportConfig & AdditionalParams
               ): AxiosPromise<ExtractApiResponseType<T>>;
               endpoint: Endpoint;
+              describeRequest: DescribeRequest<ExtractApiParamsType<T>, AdditionalParams>;
               apiPath?: string;
               apiRelativePath?: string;
               api?: T;
@@ -56,6 +75,7 @@ export type Declaration<T, AdditionalParams, Endpoint> =
                   transfortConfig: TransportConfig & AdditionalParams
               ): AxiosPromise<ExtractApiResponseType<T>>;
               endpoint: Endpoint;
+              describeRequest: DescribeRequest<ExtractApiParamsType<T>, AdditionalParams>;
               apiPath?: string;
               apiRelativePath?: string;
               api?: T;
@@ -77,7 +97,7 @@ const initDeclaration = <T, P>(declaration: Api<T>, { getConfigExtenders }: Init
     Object.keys(declaration).forEach((key) => {
         const method = key as keyof T;
 
-        const sendRequest = async <Params>(
+        const getRequestConfig = <Params>(
             params: Params,
             { ...transportConfig } = {} as TransportConfig
         ) => {
@@ -94,6 +114,15 @@ const initDeclaration = <T, P>(declaration: Api<T>, { getConfigExtenders }: Init
 
             axiosConfig = configExtender(axiosConfig, transportConfig as P);
 
+            return axiosConfig;
+        };
+
+        const sendRequest = async <Params>(
+            params: Params,
+            transportConfig = {} as TransportConfig
+        ) => {
+            const axiosConfig = getRequestConfig(params, transportConfig);
+
             try {
                 return await axios(axiosConfig);
             } catch (error) {
@@ -106,6 +135,20 @@ const initDeclaration = <T, P>(declaration: Api<T>, { getConfigExtenders }: Init
         const service = Object.assign(sendRequest, {
             endpoint: method,
             api: declaration[method],
+            describeRequest: <Params>(params: Params, transportConfig = {} as TransportConfig) => {
+                const config = getRequestConfig(params, transportConfig);
+                const headers = axios.AxiosHeaders.from(
+                    config.headers as Parameters<typeof axios.AxiosHeaders.from>[0]
+                ).toJSON(true);
+                return {
+                    url: axios.getUri(config),
+                    method: (config.method ?? 'GET').toUpperCase(),
+                    body: config.data,
+                    headers: Object.fromEntries(
+                        Object.entries(headers).map(([name, value]) => [name, String(value)])
+                    ),
+                };
+            },
         }) as Declaration<T[typeof method], P, typeof method>;
 
         api[method] = service;

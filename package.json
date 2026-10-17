@@ -108,8 +108,8 @@
         "axios": "1.20.0"
     },
     "devDependencies": {
-        "@koslibs/builder": "^1.0.0",
-        "@koslibs/configs": "^1.0.0",
+        "@koslibs/builder": "^2.0.0",
+        "@koslibs/configs": "^2.0.0",
         "@types/node": "^24.19.0",
         "@types/react": "^18.3.18",
         "@types/react-dom": "^18.3.5",
