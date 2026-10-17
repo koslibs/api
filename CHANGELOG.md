@@ -1,5 +1,11 @@
 # @koslibs/api
 
+## 0.2.2
+
+### Patch Changes
+
+- [#3](https://github.com/koslibs/api/pull/3) [`c6e0510`](https://github.com/koslibs/api/commit/c6e051071bfcac3653bcdb88848dac2efc5a78bd) Thanks [@holypower777](https://github.com/holypower777)! - Fix useApi loading state under React StrictMode and overlapping requests by ignoring stale completions and cancellations. Reset and unmount invalidate pending requests, cancellation no longer triggers onError, and request failures expose their actual message instead of a placeholder.
+
 ## 0.2.1
 
 ### Patch Changes
