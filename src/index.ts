@@ -7,6 +7,7 @@ export {
     type ApiServices,
     type ApiDeclaration,
     type Declaration,
+    type ApiRequestDescription,
 } from './create-api/create-api.js';
 export { getBaseApiPath, setBaseApiPath } from './create-api/api-base-path.js';
 
