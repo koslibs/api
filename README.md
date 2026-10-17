@@ -50,6 +50,20 @@ In another project this works automatically in Node.js, because `process.env` ex
 - `@koslibs/api/create-api/api-base-path`
 - `@koslibs/api/use-api`
 
+## Request lifecycle
+
+`useApi` tracks the latest request made by that hook instance. Starting a newer
+request makes earlier results, errors, cancellations and callbacks stale. A stale
+request cannot clear the latest request's loading state or replace its data.
+This also applies to the effect cleanup/restart performed by React StrictMode.
+
+Reset and unmount invalidate pending requests and abort the internally managed
+request. A caller-supplied `AbortSignal` remains owned by the caller; invalidated
+requests using it are ignored even if the transport completes later.
+Cancellation sets the cancel state without setting an error or calling `onError`.
+The latest request's `onFinally` runs for success, failure and cancellation;
+callbacks from stale requests are skipped. Failures expose the error message.
+
 ## Development
 
 Requires Node.js >= 24.13.0. Build and typechecking use `@koslibs/builder`;

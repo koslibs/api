@@ -58,6 +58,7 @@ export const useApi = <P, R, Endpoint extends string>(
     const defaultFetchParams = useDeepMemo(options?.params);
 
     const mounted = useRef(false);
+    const latestRequest = useRef(0);
     const controller = useRef<AbortController | null>(null);
     const [state, dispatch] = useReducer<ApiReducer<R>>(apiReducer, initialState);
 
@@ -68,10 +69,16 @@ export const useApi = <P, R, Endpoint extends string>(
 
     onSuccess.current = options?.onSuccess;
     onError.current = options?.onError;
+    onFinally.current = options?.onFinally;
     fetchImmediately.current = Boolean(options?.fetchImmediately);
 
     const fetch = useCallback(
         async (fetchParams?: P, transfortConfig?: TransfortConfig) => {
+            // Invalidate older handlers before aborting their request.
+            latestRequest.current += 1;
+            const requestId = latestRequest.current;
+            const isCurrent = () => mounted.current && requestId === latestRequest.current;
+
             if (!transfortConfig?.signal) {
                 controller.current?.abort();
                 controller.current = new AbortController();
@@ -87,7 +94,7 @@ export const useApi = <P, R, Endpoint extends string>(
 
                 const response = await api(commonFetchParams, commonTransportConfig);
 
-                if (!mounted.current) {
+                if (!isCurrent()) {
                     return;
                 }
 
@@ -100,30 +107,36 @@ export const useApi = <P, R, Endpoint extends string>(
 
                 onSuccess.current?.(response.data);
             } catch (error) {
-                if (axios.isCancel(error)) {
-                    dispatch({ type: 'cancel' });
-                }
-
-                if (!mounted.current) {
+                if (!isCurrent()) {
                     return;
                 }
+
+                if (axios.isCancel(error)) {
+                    dispatch({ type: 'cancel' });
+                    return;
+                }
+
+                const message = error instanceof Error ? error.message : String(error);
 
                 dispatch({
                     type: 'error',
                     payload: {
-                        error: 'kek',
+                        error: message,
                     },
                 });
 
-                onError.current?.('kek');
+                onError.current?.(message);
             } finally {
-                onFinally.current?.();
+                if (isCurrent()) {
+                    onFinally.current?.();
+                }
             }
         },
         [api]
     );
 
     const reset = useCallback(() => {
+        latestRequest.current += 1;
         controller.current?.abort();
         dispatch({ type: 'reset' });
     }, []);
@@ -134,6 +147,7 @@ export const useApi = <P, R, Endpoint extends string>(
         mounted.current = true;
 
         return () => {
+            latestRequest.current += 1;
             mounted.current = false;
             controller.current?.abort();
         };
