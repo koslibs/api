@@ -1,5 +1,11 @@
 # @koslibs/api
 
+## 1.0.0
+
+### Major Changes
+
+- [#4](https://github.com/koslibs/api/pull/4) [`767d224`](https://github.com/koslibs/api/commit/767d224f01e7694214a081326253b44305374d70) Thanks [@holypower777](https://github.com/holypower777)! - Expose describeRequest(params, transportConfig) and ApiRequestDescription on createApi methods. Resolve the live base URL, query serialization and declaration/global/local extenders through the same configuration pipeline as real requests without sending traffic or running Axios interceptors. Enable typed browser mocks without a runtime dependency on the API package. Support builder/configs 2 tooling.
+
 ## 0.2.2
 
 ### Patch Changes
