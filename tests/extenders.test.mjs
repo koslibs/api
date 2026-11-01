@@ -135,5 +135,8 @@ test('extender failure rejects before transport', async (t) => {
         })
     );
     t.onTestFinished(dispose);
-    await assert.rejects(createApi(declaration).read(), (error) => error === failure);
+    await assert.rejects(
+        createApi(declaration).read(),
+        (error) => error.errorCode === 'CLIENT_UNKNOWN_ERROR' && error.cause === failure
+    );
 });

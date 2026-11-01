@@ -1,12 +1,13 @@
 import { type Reducer } from 'react';
 
+import { type ApiError } from '../api-error.js';
 import { type AxiosResponse } from '../axios/index.js';
 
 type State<R> = {
     data: R | null;
     initial: boolean;
     loading: boolean;
-    error: string | null;
+    error: ApiError | null;
     success: boolean | null;
     cancel: boolean | null;
 };
@@ -24,7 +25,7 @@ export type ApiReducer<R> = Reducer<State<R>, ApiActions>;
 
 type FetchAction = { type: 'start' };
 type FetchSuccess = { type: 'success'; payload: { response: AxiosResponse } };
-type FetchError = { type: 'error'; payload: { error: string } };
+type FetchError = { type: 'error'; payload: { error: ApiError } };
 type FetchCancel = { type: 'cancel' };
 type ResetState = { type: 'reset' };
 

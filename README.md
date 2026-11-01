@@ -62,7 +62,96 @@ request. A caller-supplied `AbortSignal` remains owned by the caller; invalidate
 requests using it are ignored even if the transport completes later.
 Cancellation sets the cancel state without setting an error or calling `onError`.
 The latest request's `onFinally` runs for success, failure and cancellation;
-callbacks from stale requests are skipped. Failures expose the error message.
+callbacks from stale requests are skipped. Failures expose an `ApiError` object.
+
+## Errors and migration to v2
+
+This is a **major breaking change**: `useApi`'s `*Error` state is now
+`ApiError | null`, and `onError` receives `ApiError` instead of a string.
+Direct `createApi` calls reject with the same `ApiError` class instead of a raw
+`AxiosError`. Successful calls still return the full Axios response.
+
+```ts
+import { ApiError, createApi, useApi } from '@koslibs/api';
+
+const profiles = createApi(profilesDeclaration, 'api/v2/profiles');
+const { readError } = useApi(profiles.read, {
+    onError(error) {
+        showToast(error.errorMessage); // Previously: showToast(error)
+        if (error.errorCode === 'PROFILE_BUSY') {
+            showImportInProgress();
+        }
+    },
+});
+
+// Previously: readError (a string). In JSX: {readError?.errorMessage}
+const message = readError?.errorMessage;
+
+try {
+    const response = await profiles.read({ id: 1 });
+    console.log(response.data);
+} catch (error) {
+    if (error instanceof ApiError) {
+        showToast(error.errorMessage);
+        if (error.errorCode === 'PROFILE_BUSY') {
+            showImportInProgress();
+        }
+    } else {
+        // Cancellation keeps its original Axios cancellation error.
+        // Use axios.isCancel(error) when the caller needs to distinguish it.
+        throw error;
+    }
+}
+```
+
+The declaration and UI functions in this example belong to the application.
+For state/rendering, replace string usage such as `{readError}` with
+`{readError?.errorMessage}`. Replace `(message: string) => ...` callbacks with
+`(error: ApiError) => ...`, and branch on `error.errorCode` rather than comparing
+human-readable messages. Replace direct-call `AxiosError` checks with `ApiError`
+checks; use `error.status` instead of `error.response?.status`. The original
+failure is available as `error.cause` (typed `unknown`).
+
+`ApiError` extends `Error` and exposes readonly fields:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `errorCode` | `string` | Backend code or one of the client fallback codes below |
+| `errorMessage` | `string` | Message for display; also available as `message` |
+| `status` | `number \| null` | HTTP response status, or `null` when no response is available |
+| `type` | `ApiErrorType` | `http`, `network`, `timeout`, `invalid-response`, or `unknown` |
+| `cause` | `unknown` | Original failure, useful for diagnostics |
+
+A rejected HTTP response containing nonblank string `errorCode` and
+`errorMessage` preserves both values verbatim, uses `type: 'http'`, and retains
+the HTTP status. For example, HTTP 409 with `PROFILE_BUSY` and
+`Wait for import or analysis to complete.` reaches the application unchanged.
+Backend codes are open-ended strings; no client allowlist is required.
+
+| Failure | `errorCode` | `type` |
+| --- | --- | --- |
+| Network failure without a response | `CLIENT_NETWORK_ERROR` | `network` |
+| Timeout (`ECONNABORTED` or `ETIMEDOUT`) | `CLIENT_TIMEOUT` | `timeout` |
+| Invalid error envelope, HTML/empty body, or response parsing failure | `CLIENT_INVALID_RESPONSE` | `invalid-response` |
+| Unexpected local failure, including declaration/extender exceptions | `CLIENT_UNKNOWN_ERROR` | `unknown` |
+
+Invalid error envelopes retain the HTTP status when available and use a safe
+fallback message instead of displaying the raw response body. Network, timeout,
+and local failures retain a nonblank original error message when available.
+Use both `type` and `errorCode` if the backend uses a code identical to a client
+fallback code. `ApiError`, `ApiErrorType` and `ApiErrorOptions` are exported from
+the root, `@koslibs/api/create-api` and `@koslibs/api/use-api` entry points.
+
+Cancellation is never wrapped in `ApiError`. In `useApi`, it sets cancel state,
+leaves `*Error` null, and skips `onError`; the active request still calls
+`onFinally`. Reset, unmount and stale parallel requests retain their existing
+behavior. Hook state and `onError` receive the same normalized object.
+
+Only rejected requests are normalized. HTTP 200 with a failed background import
+or even fields named `errorCode`/`errorMessage` remains a successful HTTP request:
+the response data is unchanged and `useApi` calls `onSuccess`. The application
+handles background-job outcomes separately. Existing Axios `validateStatus`
+configuration continues to determine which HTTP statuses reject.
 
 ## Development
 

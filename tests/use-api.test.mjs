@@ -1,12 +1,13 @@
 /** @rstest-environment happy-dom */
 import assert from 'node:assert/strict';
 
-import { useApi } from '@koslibs/api';
+import * as apiPackage from '@koslibs/api';
 import { afterEach, test } from '@koslibs/builder/rstest';
 import axios from 'axios';
 import { act, createElement, Fragment, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+const { useApi, createApi } = apiPackage;
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const harnesses = new Set();
 
@@ -144,7 +145,7 @@ test('canceling the active external signal sets cancel without an error callback
     assert.deepEqual(calls, { success: [], error: [], finally: 1 });
 });
 
-test('a real request failure exposes its actual message', async () => {
+test('a real request failure exposes a structured error to state and callback', async () => {
     const { api, requests } = createDeferredApi();
     const { options, calls } = createCallbacks();
     const harness = await mount(api, options);
@@ -153,8 +154,91 @@ test('a real request failure exposes its actual message', async () => {
 
     assert.equal(harness.current.readLoading, false);
     assert.equal(harness.current.readSuccess, false);
-    assert.equal(harness.current.readError, 'Connection unavailable');
-    assert.deepEqual(calls, { success: [], error: ['Connection unavailable'], finally: 1 });
+    const error = harness.current.readError;
+    assert.equal(error.errorMessage, 'Connection unavailable');
+    assert.equal(error.errorCode, 'CLIENT_UNKNOWN_ERROR');
+    assert.equal(error.type, 'unknown');
+    assert.equal(error.status, null);
+    assert.deepEqual(calls, { success: [], error: [error], finally: 1 });
+    assert.equal(calls.error[0], error);
+});
+
+test('useApi preserves the normalized createApi error identity and backend code', async () => {
+    const { options, calls } = createCallbacks();
+    let directError;
+    const api = createApi({
+        read: () => ({
+            adapter: async (config) => {
+                throw new axios.AxiosError(
+                    'HTTP failure',
+                    'ERR_BAD_REQUEST',
+                    config,
+                    {},
+                    {
+                        data: {
+                            errorCode: 'PROFILE_BUSY',
+                            errorMessage: 'Wait for import or analysis to complete.',
+                        },
+                        status: 409,
+                        statusText: 'Conflict',
+                        headers: {},
+                        config,
+                    }
+                );
+            },
+        }),
+    });
+    const read = Object.assign(
+        async (...args) => {
+            try {
+                return await api.read(...args);
+            } catch (error) {
+                directError = error;
+                throw error;
+            }
+        },
+        { endpoint: 'read' }
+    );
+    const harness = await mount(read, options);
+    await start(harness);
+    assert.ok(harness.current.readError instanceof apiPackage.ApiError);
+    assert.equal(harness.current.readError, directError);
+    assert.equal(calls.error[0], directError);
+    assert.equal(directError.errorCode, 'PROFILE_BUSY');
+    assert.equal(directError.status, 409);
+    assert.equal(directError.type, 'http');
+    assert.equal(calls.finally, 1);
+    await act(async () => harness.current.readReset());
+    assert.equal(harness.current.readError, null);
+});
+
+test('useApi normalizes raw Axios network and timeout failures', async () => {
+    for (const [code, expectedCode, type] of [
+        ['ERR_NETWORK', 'CLIENT_NETWORK_ERROR', 'network'],
+        ['ETIMEDOUT', 'CLIENT_TIMEOUT', 'timeout'],
+    ]) {
+        const { api, requests } = createDeferredApi();
+        const { options, calls } = createCallbacks();
+        const harness = await mount(api, options);
+        await start(harness);
+        await act(async () => requests[0].reject(new axios.AxiosError('Transport failed', code)));
+        assert.equal(harness.current.readError.errorCode, expectedCode);
+        assert.equal(harness.current.readError.type, type);
+        assert.equal(calls.error[0], harness.current.readError);
+    }
+});
+
+test('a successful HTTP request with a domain failure calls onSuccess', async () => {
+    const { api, requests } = createDeferredApi();
+    const { options, calls } = createCallbacks();
+    const harness = await mount(api, options);
+    const data = { status: 'failed', errorCode: 'IMPORT_FAILED', errorMessage: 'Import failed.' };
+    await start(harness);
+    await act(async () => requests[0].resolve(data));
+    assert.equal(harness.current.readData, data);
+    assert.equal(harness.current.readError, null);
+    assert.equal(harness.current.readSuccess, true);
+    assert.deepEqual(calls, { success: [data], error: [], finally: 1 });
 });
 
 for (const settlement of ['resolve', 'reject']) {

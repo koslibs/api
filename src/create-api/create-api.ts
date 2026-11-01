@@ -1,9 +1,5 @@
-import {
-    type AxiosRequestConfig,
-    type AxiosError,
-    type AxiosPromise,
-    type CancelToken,
-} from '../axios/index.js';
+import { normalizeApiError } from '../api-error.js';
+import { type AxiosRequestConfig, type AxiosPromise, type CancelToken } from '../axios/index.js';
 import axios from '../axios/index.js';
 
 import { getBaseApiPath } from './api-base-path.js';
@@ -85,8 +81,6 @@ export type ApiServices<T, AdditionalParams = {}> = {
     [X in keyof T]: Declaration<T[X], AdditionalParams, X>;
 };
 
-type ApiError = AxiosError;
-
 type InitApiConfig<P> = {
     getConfigExtenders: (extenders: ConfigExtendersCollection) => ConfigExtendersCollection<P>;
 };
@@ -121,14 +115,11 @@ const initDeclaration = <T, P>(declaration: Api<T>, { getConfigExtenders }: Init
             params: Params,
             transportConfig = {} as TransportConfig
         ) => {
-            const axiosConfig = getRequestConfig(params, transportConfig);
-
             try {
+                const axiosConfig = getRequestConfig(params, transportConfig);
                 return await axios(axiosConfig);
             } catch (error) {
-                const errorResult = error as ApiError;
-
-                throw errorResult;
+                throw normalizeApiError(error);
             }
         };
 
@@ -215,3 +206,4 @@ export const createApi = <T, P extends object = {}>(
 };
 
 export { addGlobalApiExtenders } from './global-extenders.js';
+export { ApiError, type ApiErrorType, type ApiErrorOptions } from '../api-error.js';

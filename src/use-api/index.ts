@@ -1,6 +1,7 @@
 import axios, { type AxiosPromise } from 'axios';
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 
+import { type ApiError, normalizeApiError } from '../api-error.js';
 import { useDeepMemo } from '../use-deep-memo/use-deep-memo.js';
 
 import { apiReducer, initialState, type ApiReducer } from './reducer.js';
@@ -30,7 +31,7 @@ type BaseResult<P, R, Endpoint extends string> = {
     data: R | null;
     initial: boolean;
     loading: boolean;
-    error: string | null;
+    error: ApiError | null;
     success: boolean | null;
     cancel: boolean;
 };
@@ -45,7 +46,7 @@ type UseApiMethodResult<P, R, Endpoint extends string> = {
 
 type UseApiMethodParams<P, R> = {
     onSuccess?: (data: R) => void;
-    onError?: (error: string) => void;
+    onError?: (error: ApiError) => void;
     onFinally?: Callback;
     fetchImmediately?: boolean;
     params?: P;
@@ -116,16 +117,16 @@ export const useApi = <P, R, Endpoint extends string>(
                     return;
                 }
 
-                const message = error instanceof Error ? error.message : String(error);
+                const apiError = normalizeApiError(error);
 
                 dispatch({
                     type: 'error',
                     payload: {
-                        error: message,
+                        error: apiError,
                     },
                 });
 
-                onError.current?.(message);
+                onError.current?.(apiError);
             } finally {
                 if (isCurrent()) {
                     onFinally.current?.();
@@ -171,3 +172,5 @@ export const useApi = <P, R, Endpoint extends string>(
         [`${api.endpoint}Cancel`]: state.cancel,
     } as UseApiMethodResult<P, R, Endpoint>;
 };
+
+export { ApiError, type ApiErrorType, type ApiErrorOptions } from '../api-error.js';
