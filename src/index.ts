@@ -1,4 +1,5 @@
 export { default as axios } from './axios/index.js';
+export { ApiError, type ApiErrorType, type ApiErrorOptions } from './api-error.js';
 
 export {
     createApi,
