@@ -40,6 +40,7 @@ function useTypedApi() {
     });
     result.readError satisfies ApiError | null;
     result.readData satisfies { name: string } | null;
+    result.readPending satisfies boolean;
     // @ts-expect-error hook state no longer exposes an error string
     result.readError satisfies string | null;
     useApi(api.read, {

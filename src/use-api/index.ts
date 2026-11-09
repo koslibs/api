@@ -31,6 +31,7 @@ type BaseResult<P, R, Endpoint extends string> = {
     data: R | null;
     initial: boolean;
     loading: boolean;
+    pending: boolean;
     error: ApiError | null;
     success: boolean | null;
     cancel: boolean;
@@ -167,6 +168,8 @@ export const useApi = <P, R, Endpoint extends string>(
         [`${api.endpoint}Data`]: state.data,
         [`${api.endpoint}Initial`]: state.initial,
         [`${api.endpoint}Loading`]: state.loading,
+        [`${api.endpoint}Pending`]:
+            state.loading || (state.initial && !state.error && !state.cancel),
         [`${api.endpoint}Error`]: state.error,
         [`${api.endpoint}Success`]: state.success,
         [`${api.endpoint}Cancel`]: state.cancel,
