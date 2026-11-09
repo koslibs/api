@@ -94,6 +94,38 @@ afterEach(async () => {
     harnesses.clear();
 });
 
+test('pending tracks initial loading, failure, retry, success and reset', async () => {
+    const { api, requests } = createDeferredApi();
+    const harness = await mount(api);
+
+    assert.equal(requests.length, 0);
+    assert.equal(harness.current.readLoading, false);
+    assert.equal(harness.current.readPending, true);
+
+    await start(harness);
+    assert.equal(harness.current.readLoading, true);
+    assert.equal(harness.current.readPending, true);
+
+    await act(async () => requests[0].reject(new Error('Connection unavailable')));
+    assert.equal(harness.current.readPending, false);
+
+    await act(async () => {
+        void harness.current.readRetry();
+    });
+    assert.equal(harness.current.readPending, true);
+
+    await act(async () => requests[1].resolve('loaded'));
+    assert.equal(harness.current.readPending, false);
+
+    await start(harness);
+    assert.equal(harness.current.readInitial, false);
+    assert.equal(harness.current.readPending, true);
+
+    await act(async () => harness.current.readReset());
+    assert.equal(harness.current.readLoading, false);
+    assert.equal(harness.current.readPending, true);
+});
+
 test('fetchImmediately stays loading through StrictMode cleanup until the live request settles', async () => {
     const { api, requests } = createDeferredApi();
     const { options, calls } = createCallbacks();
@@ -139,6 +171,7 @@ test('canceling the active external signal sets cancel without an error callback
     await act(async () => controller.abort());
 
     assert.equal(harness.current.readLoading, false);
+    assert.equal(harness.current.readPending, false);
     assert.equal(harness.current.readCancel, true);
     assert.equal(harness.current.readError, null);
     assert.equal(harness.current.readSuccess, null);

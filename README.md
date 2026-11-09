@@ -64,6 +64,18 @@ Cancellation sets the cancel state without setting an error or calling `onError`
 The latest request's `onFinally` runs for success, failure and cancellation;
 callbacks from stale requests are skipped. Failures expose an `ApiError` object.
 
+`*Loading` is true while a request is running. Use `*Pending` for placeholders
+that should also be visible before the first request starts.
+
+```ts
+const { readPending } = useApi(api.read, { fetchImmediately: true });
+```
+
+`*Pending` starts as true on mount and after reset, even with
+`fetchImmediately: false`. It is true during an active request and becomes
+false when that request succeeds, fails or is canceled. A retry or a later
+request sets it to true again.
+
 ## Errors and migration to v2
 
 This is a **major breaking change**: `useApi`'s `*Error` state is now
