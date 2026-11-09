@@ -1,5 +1,11 @@
 # @koslibs/api
 
+## 2.1.0
+
+### Minor Changes
+
+- [#6](https://github.com/koslibs/api/pull/6) [`405be33`](https://github.com/koslibs/api/commit/405be3336224bd229829ea4da1d0c96be46e2708) Thanks [@holypower777](https://github.com/holypower777)! - Expose a typed `*Pending` flag from `useApi` for initial loading placeholders and active requests.
+
 ## 2.0.0
 
 ### Major Changes
